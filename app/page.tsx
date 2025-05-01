@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, CheckCircle, Sparkles, Users, BarChart } from "lucide-react"
@@ -7,6 +8,12 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { motion } from "framer-motion"
 
 export default function Home() {
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  useEffect(() => {
+    setIsLoaded(true)
+  }, [])
+
   const container = {
     hidden: { opacity: 0 },
     show: {
@@ -21,6 +28,14 @@ export default function Home() {
   const item = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+  }
+
+  if (!isLoaded) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Sparkles className="h-12 w-12 text-primary animate-pulse" />
+      </div>
+    )
   }
 
   return (

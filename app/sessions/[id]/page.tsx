@@ -16,15 +16,14 @@ import { TaskList } from "@/components/task-list"
 import { ParticipantsList } from "@/components/participants-list"
 import { SessionTimer } from "@/components/session-timer"
 import { SessionChat } from "@/components/session-chat"
-import { Sparkles, ArrowLeft, Users, BarChart4, Plus, Wand2 } from "lucide-react"
+import { Sparkles, ArrowLeft, Users, BarChart4 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import confetti from "canvas-confetti"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { LayoutSelector, type LayoutType } from "@/components/layout-selector"
 import { PokerCardDeck } from "@/components/poker-card-deck"
 import { PokerCard } from "@/components/poker-card"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
+import { AddTaskDialog } from "@/components/add-task-dialog"
 
 export default function SessionPage() {
   const params = useParams()
@@ -36,8 +35,6 @@ export default function SessionPage() {
   const [session, setSession] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [activeTask, setActiveTask] = useState<any>(null)
-  const [newTaskTitle, setNewTaskTitle] = useState("")
-  const [newTaskDescription, setNewTaskDescription] = useState("")
   const [selectedCard, setSelectedCard] = useState<number | string | null>(null)
   const [revealVotes, setRevealVotes] = useState(false)
   const [timerRunning, setTimerRunning] = useState(false)
@@ -51,12 +48,6 @@ export default function SessionPage() {
     }
     return "classic"
   })
-
-  const [aiSuggestion, setAiSuggestion] = useState<{
-    estimate: string
-    complexity: string
-    suggestions: string[]
-  } | null>(null)
 
   useEffect(() => {
     // In a real app, this would be an API call to get session data
@@ -106,10 +97,8 @@ export default function SessionPage() {
     }
   }, [sessionId, user, toast])
 
-  const handleAddTask = (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!newTaskTitle.trim()) {
+  const handleAddTask = (title: string, description: string) => {
+    if (!title.trim()) {
       toast({
         title: "Error",
         description: "Task title is required",
@@ -120,8 +109,8 @@ export default function SessionPage() {
 
     const newTask = {
       id: `task-${Date.now()}`,
-      title: newTaskTitle,
-      description: newTaskDescription,
+      title,
+      description,
       status: "pending",
       votes: [],
     }
@@ -132,8 +121,6 @@ export default function SessionPage() {
     }
 
     setSession(updatedSession)
-    setNewTaskTitle("")
-    setNewTaskDescription("")
 
     if (!activeTask) {
       setActiveTask(newTask)
@@ -275,19 +262,6 @@ export default function SessionPage() {
     }
   }
 
-  const generateAiSuggestion = () => {
-    // This would be an API call in production
-    setAiSuggestion({
-      estimate: "3-5 story points",
-      complexity: "Medium",
-      suggestions: [
-        "Break down the task into smaller subtasks",
-        "Consider adding automated tests",
-        "Document API changes",
-      ],
-    })
-  }
-
   if (loading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
@@ -329,7 +303,18 @@ export default function SessionPage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 border rounded-full px-3 py-1 bg-background/80 backdrop-blur-sm">
+            <span className="text-sm text-muted-foreground hidden sm:inline">Layout:</span>
+            <LayoutSelector onChange={handleLayoutChange} />
+          </div>
           <ThemeToggle />
+          <SessionTimer
+            duration={timerDuration}
+            isRunning={timerRunning}
+            onStart={handleStartTimer}
+            onStop={handleStopTimer}
+            onComplete={handleTimerComplete}
+          />
           <Button variant="outline" onClick={() => router.push("/dashboard")} className="rounded-full">
             Exit Session
           </Button>
@@ -339,129 +324,16 @@ export default function SessionPage() {
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <Tabs defaultValue="tasks" className="space-y-6">
-            <TabsList className="rounded-full p-1 bg-muted/50 backdrop-blur-sm flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <TabsTrigger value="tasks" className="rounded-full">
-                  Tasks
-                </TabsTrigger>
-                <TabsTrigger value="discussion" className="rounded-full">
-                  Discussion
-                </TabsTrigger>
-              </div>
-              <div className="flex items-center gap-3">
-                <LayoutSelector onChange={setLayout} />
-                <SessionTimer
-                  duration={timerDuration}
-                  isRunning={timerRunning}
-                  onStart={handleStartTimer}
-                  onStop={handleStopTimer}
-                  onComplete={handleTimerComplete}
-                />
-              </div>
+            <TabsList className="rounded-full p-1 bg-muted/50 backdrop-blur-sm">
+              <TabsTrigger value="tasks" className="rounded-full">
+                Tasks
+              </TabsTrigger>
+              <TabsTrigger value="discussion" className="rounded-full">
+                Discussion
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="tasks" className="space-y-4 animate-in">
-              <div className="flex justify-between items-center">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button className="gap-2 rounded-full bg-gradient-to-r from-primary to-secondary hover:opacity-90">
-                      <Plus className="h-4 w-4" /> Add New Task
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[600px]">
-                    <DialogHeader>
-                      <DialogTitle className="flex items-center gap-2">
-                        <Sparkles className="h-5 w-5 text-primary" />
-                        Add New Task
-                      </DialogTitle>
-                      <DialogDescription>
-                        Add a user story or task to estimate. Use AI assistance for better task planning.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleAddTask} className="space-y-6 py-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="title">Task Title</Label>
-                        <Input
-                          id="title"
-                          placeholder="Enter task title"
-                          value={newTaskTitle}
-                          onChange={(e) => setNewTaskTitle(e.target.value)}
-                          className="rounded-lg border-primary/20 focus-visible:ring-primary"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="description">Task Description</Label>
-                        <Textarea
-                          id="description"
-                          placeholder="Describe the task in detail"
-                          value={newTaskDescription}
-                          onChange={(e) => setNewTaskDescription(e.target.value)}
-                          rows={3}
-                          className="rounded-lg border-primary/20 focus-visible:ring-primary"
-                        />
-                      </div>
-
-                      <div className="rounded-lg border border-primary/10 p-4 space-y-4">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium">AI Assistance</span>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="gap-2"
-                            onClick={generateAiSuggestion}
-                          >
-                            <Wand2 className="h-4 w-4" />
-                            Generate Suggestions
-                          </Button>
-                        </div>
-
-                        {aiSuggestion && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="space-y-3"
-                          >
-                            <div className="flex gap-4">
-                              <div className="flex-1 rounded-md bg-primary/5 p-3">
-                                <p className="text-xs text-muted-foreground mb-1">Estimated Points</p>
-                                <p className="font-medium">{aiSuggestion.estimate}</p>
-                              </div>
-                              <div className="flex-1 rounded-md bg-secondary/5 p-3">
-                                <p className="text-xs text-muted-foreground mb-1">Complexity</p>
-                                <p className="font-medium">{aiSuggestion.complexity}</p>
-                              </div>
-                            </div>
-                            <div className="rounded-md bg-accent/5 p-3">
-                              <p className="text-xs text-muted-foreground mb-2">Suggestions</p>
-                              <ul className="space-y-1 text-sm">
-                                {aiSuggestion.suggestions.map((suggestion, index) => (
-                                  <li key={index} className="flex items-start gap-2">
-                                    <span className="text-accent">•</span>
-                                    <span>{suggestion}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          </motion.div>
-                        )}
-                      </div>
-
-                      <div className="flex justify-end gap-3">
-                        <DialogTrigger asChild>
-                          <Button type="button" variant="outline">Cancel</Button>
-                        </DialogTrigger>
-                        <Button
-                          type="submit"
-                          className="gap-2 bg-gradient-to-r from-primary to-secondary hover:opacity-90"
-                        >
-                          <Plus className="h-4 w-4" /> Add Task
-                        </Button>
-                      </div>
-                    </form>
-                  </DialogContent>
-                </Dialog>
-              </div>
-
+              <AddTaskDialog onAddTask={handleAddTask} />
               <TaskList tasks={session.tasks} activeTaskId={activeTask?.id} onSelectTask={handleSelectTask} />
             </TabsContent>
             <TabsContent value="discussion" className="animate-in">
