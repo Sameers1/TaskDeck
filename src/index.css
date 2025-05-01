@@ -53,19 +53,173 @@
 
   body {
     @apply bg-background text-foreground;
+    background-image: radial-gradient(
+      circle at top right,
+      hsla(262, 80%, 95%, 0.8),
+      hsla(199, 100%, 95%, 0.4)
+    );
+    background-attachment: fixed;
   }
 }
 
 @layer components {
   .poker-card {
-    @apply w-20 h-28 bg-white rounded-lg shadow-md flex items-center justify-center font-bold text-2xl text-scrum-darkText border border-gray-200 transition-all hover:shadow-lg hover:scale-105 cursor-pointer;
+    @apply relative w-20 h-28 flex items-center justify-center font-bold text-2xl transition-all cursor-pointer;
+    perspective: 1000px;
+    transform-style: preserve-3d;
+    background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05), 
+                0 1px 3px rgba(0, 0, 0, 0.1), 
+                inset 0 -2px 0 rgba(0, 0, 0, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    overflow: hidden;
+  }
+  
+  .poker-card::before {
+    content: "";
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.4) 0%, rgba(14, 165, 233, 0.2) 100%);
+    border-radius: 24px;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .poker-card:hover::before {
+    opacity: 1;
+  }
+  
+  .poker-card .card-content {
+    @apply flex items-center justify-center w-full h-full;
+    background: white;
+    border-radius: 10px;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
+  }
+  
+  .poker-card .card-value {
+    @apply text-3xl font-bold;
+    background: linear-gradient(135deg, #8B5CF6 0%, #6E59A5 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   }
   
   .poker-card-selected {
-    @apply ring-2 ring-scrum-purple ring-offset-2 bg-scrum-blue text-white;
+    @apply ring-2 ring-scrum-purple;
+    transform: translateY(-10px) rotate(0deg) !important;
+    box-shadow: 0 15px 30px rgba(139, 92, 246, 0.3) !important;
+    background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .poker-card-selected .card-content {
+    background: rgba(255, 255, 255, 0.95);
+  }
+  
+  .poker-card-selected .card-value {
+    background: linear-gradient(135deg, #0EA5E9 0%, #8B5CF6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
   
   .task-card {
-    @apply p-4 border rounded-lg bg-white shadow-sm hover:shadow-md transition-all;
+    @apply p-6 border rounded-lg bg-white shadow-sm hover:shadow-md transition-all relative overflow-hidden;
+    border-image: linear-gradient(to right, #8B5CF6, #0EA5E9) 1;
+  }
+  
+  .task-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, #8B5CF6, #0EA5E9);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .task-card:hover::before {
+    opacity: 1;
+  }
+  
+  /* Animation keyframes */
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  
+  @keyframes fadeInUp {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+  
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  .animate-pulse {
+    animation: pulse 2s ease-in-out infinite;
+  }
+  
+  .animate-fade-in-up {
+    animation: fadeInUp 0.5s ease-out forwards;
+  }
+  
+  .shimmer-effect {
+    background: linear-gradient(90deg, 
+                rgba(255,255,255,0), 
+                rgba(255,255,255,0.5), 
+                rgba(255,255,255,0));
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+  
+  /* Fancy header and footer */
+  header, footer {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  header::before, footer::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(14, 165, 233, 0.05) 100%);
+    z-index: -1;
+  }
+  
+  /* Glassmorphism effect */
+  .glass-card {
+    @apply bg-white bg-opacity-60 backdrop-filter backdrop-blur-lg border border-white border-opacity-20 shadow-lg;
   }
 }
